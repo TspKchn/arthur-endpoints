@@ -1,0 +1,32 @@
+name: Sign panel endpoints
+on:
+  push:
+    branches: [main]
+    paths: [panel.json]
+  schedule:
+    - cron: '17 3 1 * *'   # re-sign monthly so the file never expires (valid 90 days)
+  workflow_dispatch: {}
+permissions:
+  contents: write
+concurrency: sign-endpoints
+jobs:
+  sign:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sign with the k1 key from repository secrets
+        env:
+          ENDPOINTS_K1: ${{ secrets.ENDPOINTS_K1 }}
+        run: |
+          test -n "$ENDPOINTS_K1" || { echo 'Secret ENDPOINTS_K1 is missing'; exit 1; }
+          umask 077
+          key="$RUNNER_TEMP/k1.pem"
+          printf '%s\n' "$ENDPOINTS_K1" > "$key"
+          python3 sign.py --key-id k1 --key-file "$key"
+          rm -f "$key"
+      - name: Publish endpoints.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add endpoints.json
+          git diff --cached --quiet || { git commit -m "Sign endpoints.json"; git push; }
