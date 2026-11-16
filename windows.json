@@ -1,7 +1,7 @@
 {
-  "version": "1.0.0.12",
-  "label": "r13",
-  "url": "https://github.com/TspKchn/arthur-endpoints/releases/download/r13/Arthur-VPN-1.0.0-Install-r13.exe",
+  "version": "1.1.0.0",
+  "label": "1.1.0",
+  "url": "https://github.com/TspKchn/arthur-endpoints/releases/download/v1.1.0/Arthur-VPN-1.1.0-Install.exe",
   "min_version": "",
-  "notes": "แก้: กด Finish ในตัวติดตั้งแล้วโปรแกรมไม่เปิด (ค้างที่ข้อความกำลังติดตั้งอัปเดต)"
+  "notes": "รุ่น 1.1.0: เลขรุ่นตรงกันทุกที่ อัปเดตอัตโนมัติแบบมีหน้าต่างสถานะ และแก้โปรแกรมไม่เปิดหลังกด Finish ในตัวติดตั้ง"
 }
