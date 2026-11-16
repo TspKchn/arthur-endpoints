@@ -73,10 +73,49 @@ def check():
     print('PASS endpoints.json seq=%s key=%s panels=%s' % (body['seq'], outer['key'], ', '.join(body['panels'])))
 
 
+WIN_SCHEMA, WIN_APP = 'arthur-windows-update-v1', 'arthur-vpn-windows'
+VERSION = re.compile(r'\d+\.\d+\.\d+\.\d+')
+
+
+def sign_payload(body, key_id, key_file):
+    payload = json.dumps(body, separators=(',', ':'), ensure_ascii=False).encode('utf-8')
+    with tempfile.TemporaryDirectory() as d:
+        data = Path(d) / 'payload'; data.write_bytes(payload)
+        sig = openssl('dgst', '-sha256', '-sign', str(key_file), str(data))
+    return {'key': key_id, 'payload': base64.b64encode(payload).decode(), 'sig': base64.b64encode(sig).decode()}
+
+
+def sign_windows(key_id, key_file):
+    """windows.json (edited by hand) -> windows-update.json. SHA-256 and size come from downloading the installer."""
+    src = ROOT / 'windows.json'
+    if not src.is_file(): return
+    w = json.loads(src.read_text(encoding='utf-8'))
+    version, url = str(w['version']), str(w['url'])
+    if not VERSION.fullmatch(version): raise SystemExit('windows.json version must be like 1.0.0.11')
+    if not url.startswith('https://'): raise SystemExit('windows.json url must be https://')
+    minimum = str(w.get('min_version') or '')
+    if minimum and not VERSION.fullmatch(minimum): raise SystemExit('min_version must be like 1.0.0.9 or empty')
+    import hashlib, urllib.request
+    digest, size = hashlib.sha256(), 0
+    with urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': 'arthur-endpoints-signer'}), timeout=120) as r:
+        while True:
+            chunk = r.read(1 << 20)
+            if not chunk: break
+            digest.update(chunk); size += len(chunk)
+            if size > 400 * 1024 * 1024: raise SystemExit('Installer larger than 400 MB')
+    now = int(time.time())
+    body = {'schema': WIN_SCHEMA, 'app': WIN_APP, 'version': version, 'label': str(w.get('label', ''))[:20], 'url': url,
+            'sha256': digest.hexdigest(), 'size': size, 'min_version': minimum, 'notes': str(w.get('notes', ''))[:600],
+            'issued': now, 'expires': now + VALID_DAYS * 86400}
+    out = sign_payload(body, key_id, key_file)
+    (ROOT / 'windows-update.json').write_text(json.dumps(out, indent=2) + chr(10), encoding='utf-8', newline=chr(10))
+    print('Signed windows-update.json version=%s size=%d sha256=%s mandatory_below=%s' % (version, size, body['sha256'], minimum or '-'))
+
+
 if __name__ == '__main__':
     a = argparse.ArgumentParser(description=__doc__)
     a.add_argument('--key-id', choices=['k1', 'k2']); a.add_argument('--key-file'); a.add_argument('--check', action='store_true')
     args = a.parse_args()
     if args.check: check()
-    elif args.key_id and args.key_file: sign(args.key_id, args.key_file); check()
+    elif args.key_id and args.key_file: sign(args.key_id, args.key_file); check(); sign_windows(args.key_id, args.key_file)
     else: a.error('use --check, or --key-id with --key-file')

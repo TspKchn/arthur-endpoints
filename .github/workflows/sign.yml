@@ -2,7 +2,7 @@ name: Sign panel endpoints
 on:
   push:
     branches: [main]
-    paths: [panel.json]
+    paths: [panel.json, windows.json]
   schedule:
     - cron: '17 3 1 * *'   # re-sign monthly so the file never expires (valid 90 days)
   workflow_dispatch: {}
@@ -28,5 +28,5 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add endpoints.json
+          git add endpoints.json windows-update.json 2>/dev/null || git add endpoints.json
           git diff --cached --quiet || { git commit -m "Sign endpoints.json"; git push; }
