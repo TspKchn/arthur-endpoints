@@ -1,7 +1,7 @@
 {
-  "version": "1.1.0.0",
-  "label": "1.1.0",
-  "url": "https://github.com/TspKchn/arthur-endpoints/releases/download/v1.1.0/Arthur-VPN-1.1.0-Install.exe",
+  "version": "1.1.1.0",
+  "label": "1.1.1",
+  "url": "https://github.com/TspKchn/arthur-endpoints/releases/download/v1.1.1/Arthur-VPN-1.1.1-Install.exe",
   "min_version": "",
-  "notes": "รุ่น 1.1.0: เลขรุ่นตรงกันทุกที่ อัปเดตอัตโนมัติแบบมีหน้าต่างสถานะ และแก้โปรแกรมไม่เปิดหลังกด Finish ในตัวติดตั้ง"
+  "notes": "รุ่น 1.1.1: เพิ่มปุ่มโหลดแอป Android ที่แถบซ้ายล่าง เปิดหน้า Arthur VPN บน Google Play"
 }
